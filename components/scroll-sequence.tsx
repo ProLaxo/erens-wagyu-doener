@@ -7,11 +7,12 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 const FRAME_COUNT = 41;
-const SEQUENCE_BACKGROUND = "#08080a";
+const SEQUENCE_BACKGROUND = "#070c0f";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const foregroundLayers = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
 
 type Chapter = {
   body: string;
@@ -45,6 +46,56 @@ function getFramePath(index: number) {
   return `${basePath}/sequence/ezgif-frame-${String(index + 1).padStart(3, "0")}.jpg`;
 }
 
+function drawFeatheredForeground(
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  pixelRatio: number,
+) {
+  let layer = foregroundLayers.get(canvas);
+
+  if (!layer) {
+    layer = document.createElement("canvas");
+    foregroundLayers.set(canvas, layer);
+  }
+
+  if (layer.width !== canvas.width || layer.height !== canvas.height) {
+    layer.width = canvas.width;
+    layer.height = canvas.height;
+  }
+
+  const layerContext = layer.getContext("2d");
+
+  if (!layerContext) {
+    context.drawImage(image, x, y, width, height);
+    return;
+  }
+
+  layerContext.setTransform(1, 0, 0, 1, 0, 0);
+  layerContext.clearRect(0, 0, layer.width, layer.height);
+  layerContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  layerContext.drawImage(image, x, y, width, height);
+  layerContext.globalCompositeOperation = "destination-in";
+
+  const mask = layerContext.createLinearGradient(x, 0, x + width, 0);
+  mask.addColorStop(0, "rgba(0, 0, 0, 0)");
+  mask.addColorStop(0.14, "rgba(0, 0, 0, 1)");
+  mask.addColorStop(0.86, "rgba(0, 0, 0, 1)");
+  mask.addColorStop(1, "rgba(0, 0, 0, 0)");
+  layerContext.fillStyle = mask;
+  layerContext.fillRect(x, y, width, height);
+  layerContext.globalCompositeOperation = "source-over";
+
+  context.save();
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.drawImage(layer, 0, 0);
+  context.restore();
+}
+
 function drawFrame(
   canvas: HTMLCanvasElement,
   context: CanvasRenderingContext2D,
@@ -68,6 +119,34 @@ function drawFrame(
 
   const imageRatio = image.naturalWidth / image.naturalHeight;
   const viewportRatio = width / height;
+  const coverScale =
+    Math.max(width / image.naturalWidth, height / image.naturalHeight) * 1.16;
+  const coverWidth = image.naturalWidth * coverScale;
+  const coverHeight = image.naturalHeight * coverScale;
+  const coverX = (width - coverWidth) / 2;
+  const coverY = (height - coverHeight) / 2;
+
+  context.save();
+  context.filter = "blur(54px) brightness(0.52) saturate(1.08)";
+  context.drawImage(image, coverX, coverY, coverWidth, coverHeight);
+  context.restore();
+
+  const sideWash = context.createLinearGradient(0, 0, width, 0);
+  sideWash.addColorStop(0, "rgba(7, 12, 15, 0.34)");
+  sideWash.addColorStop(0.3, "rgba(7, 12, 15, 0)");
+  sideWash.addColorStop(0.7, "rgba(7, 12, 15, 0)");
+  sideWash.addColorStop(1, "rgba(7, 12, 15, 0.34)");
+  context.fillStyle = sideWash;
+  context.fillRect(0, 0, width, height);
+
+  const floorWash = context.createLinearGradient(0, 0, 0, height);
+  floorWash.addColorStop(0, "rgba(7, 12, 15, 0.3)");
+  floorWash.addColorStop(0.24, "rgba(7, 12, 15, 0)");
+  floorWash.addColorStop(0.74, "rgba(7, 12, 15, 0)");
+  floorWash.addColorStop(1, "rgba(7, 12, 15, 0.46)");
+  context.fillStyle = floorWash;
+  context.fillRect(0, 0, width, height);
+
   const mobileFit = width < 760;
   const scale = mobileFit
     ? Math.max(width / image.naturalWidth, height / image.naturalHeight)
@@ -82,7 +161,21 @@ function drawFrame(
   const x = (width - renderWidth) / 2;
   const y = (height - renderHeight) / 2;
 
-  context.drawImage(image, x, y, renderWidth, renderHeight);
+  if (mobileFit) {
+    context.drawImage(image, x, y, renderWidth, renderHeight);
+    return;
+  }
+
+  drawFeatheredForeground(
+    canvas,
+    context,
+    image,
+    x,
+    y,
+    renderWidth,
+    renderHeight,
+    pixelRatio,
+  );
 }
 
 export function ScrollSequence() {
@@ -93,7 +186,6 @@ export function ScrollSequence() {
   const renderRequest = useRef<number | null>(null);
   const resizeFrame = useRef<number | null>(null);
   const prefersReducedMotion = useReducedMotion();
-  const [ready, setReady] = useState(false);
   const { scrollYProgress } = useScroll({
     offset: ["start start", "end end"],
     target: sectionRef,
@@ -144,7 +236,6 @@ export function ScrollSequence() {
           return;
         }
 
-        setReady(true);
         renderFrame(0);
       });
 
@@ -200,7 +291,7 @@ export function ScrollSequence() {
     >
       <div className="sticky top-0 h-screen overflow-hidden">
         <motion.div
-          className="sequence-frame absolute inset-0"
+          className="absolute inset-0"
           style={{ y: prefersReducedMotion ? 0 : sceneLift }}
         >
           <canvas
@@ -213,19 +304,10 @@ export function ScrollSequence() {
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#08080a_0%,transparent_22%,transparent_78%,#08080a_100%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,#08080a_0%,transparent_18%,transparent_78%,#08080a_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,#070c0f_0%,transparent_13%,transparent_84%,#070c0f_100%)]"
         />
 
         <div className="pointer-events-none relative mx-auto h-full max-w-7xl px-5 sm:px-8 lg:px-12">
-          <div className="absolute inset-x-5 top-7 flex items-center justify-between text-xs uppercase tracking-[0.22em] text-white/40 sm:inset-x-8 lg:inset-x-12">
-            <p>Erens Wagyu Döner</p>
-            <p>{ready ? "Skewer in motion" : "Loading sequence"}</p>
-          </div>
-
           {chapters.map((chapter) => (
             <ChapterOverlay
               chapter={chapter}
@@ -233,10 +315,6 @@ export function ScrollSequence() {
               progress={scrollYProgress}
             />
           ))}
-
-          <p className="absolute bottom-8 left-5 max-w-56 text-sm leading-6 text-white/50 sm:left-8 lg:left-12">
-            Scroll weiter. Jeder Frame folgt deinem Tempo.
-          </p>
         </div>
       </div>
     </section>

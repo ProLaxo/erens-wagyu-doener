@@ -3,11 +3,42 @@ import Image from "next/image";
 import { ScrollSequence } from "@/components/scroll-sequence";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const ingredients = [
+  {
+    body: "Knusprig angeröstet, damit der Saft bleibt und jeder Biss Struktur hat.",
+    title: "Ofenwarmes Brot",
+  },
+  {
+    body: "Tomate, Gurke und fein geschnittener Eisbergsalat für kalte Frische.",
+    title: "Frische",
+  },
+  {
+    body: "Rotkohl, Petersilie und Zwiebel mit Sumach für Säure und Tiefe.",
+    title: "Aromatik",
+  },
+  {
+    body: "Cremige Kräuterbasis, Knoblauch und Chili als klarer letzter Zug.",
+    title: "Saucen",
+  },
+];
 
 export default function Home() {
   return (
     <main className="w-full max-w-full overflow-x-clip bg-sequence text-white">
       <section className="relative isolate flex min-h-[96vh] flex-col justify-between overflow-hidden px-5 pb-8 pt-6 sm:px-8 lg:px-12">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-[-10%] scale-125 opacity-55 blur-3xl"
+        >
+          <Image
+            alt=""
+            className="object-cover object-center"
+            fill
+            priority
+            sizes="100vw"
+            src={`${basePath}/sequence/ezgif-frame-001.jpg`}
+          />
+        </div>
         <div
           aria-hidden="true"
           className="hero-frame pointer-events-none absolute inset-0 opacity-55"
@@ -23,7 +54,7 @@ export default function Home() {
         </div>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#08080a_0%,rgba(8,8,10,0.28)_28%,rgba(8,8,10,0.28)_72%,#08080a_100%),linear-gradient(180deg,rgba(8,8,10,0.54)_0%,rgba(8,8,10,0.22)_44%,#08080a_100%),radial-gradient(circle_at_50%_32%,rgba(255,255,255,0.07),transparent_28%),radial-gradient(circle_at_50%_100%,rgba(208,110,54,0.18),transparent_32%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(7,12,15,0.94)_0%,rgba(7,12,15,0.22)_28%,rgba(7,12,15,0.22)_72%,rgba(7,12,15,0.94)_100%),linear-gradient(180deg,rgba(7,12,15,0.68)_0%,rgba(7,12,15,0.18)_44%,#070c0f_100%),radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.07),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(208,110,54,0.18),transparent_34%)]"
         />
 
         <header className="relative z-10 flex items-center justify-between gap-4 border-b border-white/10 pb-5 text-sm text-white/60">
@@ -63,6 +94,46 @@ export default function Home() {
 
       <ScrollSequence />
 
+      <section className="relative isolate overflow-hidden px-5 py-28 sm:px-8 sm:py-36 lg:px-12 lg:py-44">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(236,139,67,0.18),transparent_32%),linear-gradient(180deg,rgba(7,12,15,0)_0%,rgba(7,12,15,0.92)_18%,#070c0f_100%)]"
+        />
+        <div className="relative mx-auto max-w-6xl">
+          <div className="grid gap-8 border-t border-white/10 pt-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
+            <div className="max-w-4xl">
+              <p className="mb-5 text-sm uppercase tracking-[0.22em] text-white/45">
+                Der Aufbau
+              </p>
+              <h2 className="text-balance text-[clamp(2.35rem,4.8vw,5.6rem)] font-medium leading-[0.94] tracking-[0] text-white/90">
+                Klassische Döner-Zutaten, auf Wagyu-Niveau geführt.
+              </h2>
+            </div>
+            <p className="max-w-xl text-pretty text-base leading-7 text-white/60 sm:text-lg lg:justify-self-end">
+              Der Spieß bleibt der Mittelpunkt. Brot, Gemüse, Kräuter und
+              Saucen setzen Frische, Säure und Schärfe so präzise, dass das
+              Wagyu nicht überdeckt wird.
+            </p>
+          </div>
+
+          <div className="mt-14 grid border-y border-white/10 md:grid-cols-2 xl:grid-cols-4">
+            {ingredients.map((ingredient) => (
+              <article
+                className="min-h-56 border-b border-white/10 px-0 py-8 md:px-7 md:[&:nth-last-child(-n+2)]:border-b-0 xl:min-h-72 xl:border-b-0 xl:border-r xl:first:pl-0 xl:last:border-r-0 xl:last:pr-0"
+                key={ingredient.title}
+              >
+                <h3 className="text-2xl font-medium tracking-[0] text-white/90">
+                  {ingredient.title}
+                </h3>
+                <p className="mt-5 max-w-xs leading-7 text-white/60">
+                  {ingredient.body}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <footer className="relative isolate overflow-hidden px-5 py-28 sm:px-8 sm:py-36 lg:px-12">
         <div
           aria-hidden="true"
@@ -84,6 +155,18 @@ export default function Home() {
           >
             Spieß erleben
           </a>
+        </div>
+
+        <div className="relative mx-auto mt-20 flex max-w-6xl flex-col gap-5 border-t border-white/10 pt-6 text-sm text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <p>Erens Wagyu Döner</p>
+          <nav
+            aria-label="Platzhalter für rechtliche und soziale Links"
+            className="flex flex-wrap gap-x-7 gap-y-3 uppercase tracking-[0.18em]"
+          >
+            <span>Impressum</span>
+            <span>Standort</span>
+            <span>Instagram</span>
+          </nav>
         </div>
       </footer>
     </main>
