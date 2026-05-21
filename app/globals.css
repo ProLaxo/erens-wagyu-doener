@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sequence-bg: #08080a;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--sequence-bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--sequence-bg);
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.hero-frame,
+.sequence-frame {
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.45) 24%,
+    #000 39%,
+    #000 61%,
+    rgba(0, 0, 0, 0.45) 76%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.45) 24%,
+    #000 39%,
+    #000 61%,
+    rgba(0, 0, 0, 0.45) 76%,
+    transparent 100%
+  );
+}
+
+@media (max-width: 759px) {
+  .hero-frame,
+  .sequence-frame {
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.95) 0%,
+      #000 22%,
+      #000 76%,
+      rgba(0, 0, 0, 0.25) 100%
+    );
+    mask-image: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.95) 0%,
+      #000 22%,
+      #000 76%,
+      rgba(0, 0, 0, 0.25) 100%
+    );
+  }
+}
+
+::selection {
+  background: rgba(235, 147, 79, 0.34);
+  color: #fff;
+}
